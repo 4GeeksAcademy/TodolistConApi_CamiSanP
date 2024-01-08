@@ -1,28 +1,130 @@
-import React, { useState } from "react";
+import React, {useState, useEffect} from "react";
 
-
-//create your first component
 const Home = () => {
-	const [value, setValue] = useState("");
-	const [todos, setTodos] = useState([]);
-	const [delet, setDelet] = useState(false);
-	return (
-		<div className="Todolist">
-			<h1 className="myh1">Todos</h1>
-			<ul>
-				<input type="text" className="input" onChange={(e) => setValue(e.target.value)} value={value} placeholder="What needs to be done?" onKeyDown={(e) => { if (e.key === "Enter") { setTodos(todos.concat([value])); setValue(""); } }} />
 
-				{todos.map((item, index) => (
-					<li key={index} className="items" onMouseEnter={() => setDelet(index)} onMouseLeave={() => setDelet(null)}> {item}{" "}{delet === index && (
-					  <i className="fa-solid fa-xmark" onClick={() => setTodos(todos.filter((_, indexActual) => index !== indexActual))}></i>
-					)}
-				  </li>
-				))}
-			</ul>
-			<div style={{paddingLeft:"30px", color:" rgba(62, 0, 128, 0.384)"}}>{todos.length > 0 ? (<p>{todos.length} item left</p>) : (<p>Add task</p>)}</div>
-		</div>
+	
+	const [tarea,setTarea] = useState("");
+	const [lista,setLista] = useState([]);
 
-	);
-};
+	function crearUsuario(){
+		fetch(`https://playground.4geeks.com/apis/fake/todos/user/camisanp`,
+		{method: 'POST', 
+		headers: {
+			'Content-Type': 'application/json'},
+		body: JSON.stringify([])
+	  })
+		.then((response)=>response.json())
+		.then((data)=>console.log(data))
+	}
+
+
+	function agregarTarea(e) {
+		e.preventDefault()
+		setLista(lista.concat({label: tarea, done: false}))
+		setTarea("")
+	}
+
+	const borrarTarea = (indexItem) => {
+		setLista((prevState) =>
+		  prevState.filter((listaItems, index) => index !== indexItem)
+		);
+	  };
+
+	function obtenerLista(){
+		fetch(`https://playground.4geeks.com/apis/fake/todos/user/camisanp`,
+		{method: 'GET', 
+		
+	  })
+		.then((response)=>response.json())
+		.then((data)=>setLista(data))
+	}
+
+	function borrarLista(){
+		fetch(`https://playground.4geeks.com/apis/fake/todos/user/camisanp`,
+		{method: 'DELETE', 
+		headers: {
+			'Content-Type': 'application/json'}
+	  })
+		.then((response)=>response.json())
+		.then((data)=>{
+			console.log(data.result)
+			if (data.result === "ok"){
+				setLista([])
+			}
+		})
+		
+	}
+	  
+	function actualizar(){
+		fetch(`https://playground.4geeks.com/apis/fake/todos/user/camisanp`,
+		{method: 'PUT', 
+		headers: {
+			'Content-Type': 'application/json'},
+		body: JSON.stringify(lista)
+	  })
+		.then((response)=>response.json())
+		.then((data)=>console.log(data))
+	}
+	
+	useEffect (()=>{
+		crearUsuario();
+		obtenerLista()
+	},[])
+
+	useEffect (()=>{
+		actualizar()
+		},[lista])
+
+		return (
+			<div className="container mt-5">
+			  <div className="card">
+				<div className="card-header bg-light">
+				  <h2 className="titulo text-center">Lista de Tareas</h2>
+				</div>
+				<div className="card-body">
+				  <div className="input-group mb-3">
+					<input
+					  type="text"
+					  className="form-control"
+					  value={tarea}
+					  onChange={(e) => setTarea(e.target.value)}
+					  placeholder="Añadir una tarea"
+					/>
+					<div className="input-group-append">
+					  <button
+						className="btn btn-primary"
+						type="button"
+						onClick={agregarTarea}
+					  >
+						Agregar Tarea
+					  </button>
+					</div>
+				  </div>
+				  <ul className="list-group">
+					{lista.map((item, index) => (
+					  <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+						{item.label}
+						<button
+						  className="btn btn-danger"
+						  onClick={() => borrarTarea(index)}
+						>
+						  <i className="fas fa-trash-alt" />
+						</button>
+					  </li>
+					))}
+				  </ul>
+				</div>
+				<div className="card-footer bg-light">
+				  <button
+					className="btn btn-danger btn-sm"
+					onClick={borrarLista}
+				  >
+					Borrar Lista
+				  </button>
+				</div>
+			  </div>
+			</div>
+		  );
+		};
 
 export default Home;
